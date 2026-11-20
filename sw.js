@@ -1,6 +1,6 @@
 const scope = self.registration.scope;
 const cachePrefix = "unit-water:" + scope + ":";
-const cacheName = cachePrefix + "131ffa644a965ce1";
+const cacheName = cachePrefix + "saved-settings-v1";
 const indexURL = new URL("index.html", scope).href;
 const appFiles = new Set([
   "index.html",

@@ -12,6 +12,15 @@
 .mass-bounds{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mass-bounds div{min-width:0;padding:9px 6px}.mass-bounds output{display:block;font-size:clamp(13px,3.2vw,18px);overflow-wrap:anywhere}.mass-bounds .zero-mass{background:#d9eadb}.mass-bounds .zero-mass span{color:#39684e;font-weight:650}.mass-bounds .mass-unit{margin-left:0}
 .page{padding-bottom:calc(155px + env(safe-area-inset-bottom))}html{scroll-padding-bottom:calc(160px + env(safe-area-inset-bottom))}input{scroll-margin-bottom:160px}.fixed-summary{position:fixed;z-index:50;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:550px;padding:13px 17px;background:#173f3a;color:#fff;border:1px solid #37645a;border-radius:18px;box-shadow:0 6px 26px #173f3a40}.fixed-values{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:15px;align-items:center}.fixed-metric{min-width:0}.fixed-metric+.fixed-metric{padding-left:15px;border-left:1px solid #43655d}.fixed-label{font-size:11px;color:#d2e7dc;display:block;line-height:1.5}.fixed-value{font-size:30px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.fixed-unit{font-size:10px;color:#c5ded2;margin-left:5px;white-space:nowrap}.fixed-state{font-size:11px;font-weight:650;border-radius:7px;padding:6px 8px;background:#315c4b;color:#dcf0df;white-space:nowrap}.fixed-state[data-pass=false]{background:#714c37;color:#ffe2c7}.fixed-state[data-pass=pending]{background:#3b5550;color:#d1dbd7}@media(max-width:370px){.fixed-summary{padding:12px}.fixed-values{gap:10px}.fixed-metric+.fixed-metric{padding-left:10px}.fixed-value{font-size:26px}.fixed-unit{display:block;margin-left:0}.fixed-state{font-size:10px;padding:6px}}@media print{.fixed-summary{display:none}.page{padding-bottom:20px}}
 .material-group{margin-top:20px}.material-group h3{font-size:12px;font-weight:650;color:#577063;margin:0 0 10px}.mix-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mix-grid label .unit{display:none}.derived-values{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;background:#edf5ed;border-radius:13px;padding:16px;margin-top:22px}.derived-label{display:block;font-size:11px;color:#52725c;line-height:1.8;margin-bottom:5px}.derived-label small{font-size:10px;font-weight:650;white-space:nowrap}.derived-values output{font-size:23px;font-weight:650;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.mix-conditions{margin-top:22px}@media(max-width:400px){.mix-grid{gap:8px}.mix-grid input{font-size:19px;padding:12px 8px}.derived-values{padding:13px;gap:12px}.derived-values output{font-size:21px}}
+.saved-settings{margin:0 0 20px;border:1px solid #dce4d9;border-radius:12px;padding:10px 14px;background:#f7f9f6}
+.saved-settings summary,.saved-settings label{font-size:14px}
+.saved-settings label{margin-top:10px}
+.saved-settings input,.saved-settings select{width:100%;min-height:44px;padding:9px 10px;border:1px solid #d6e2d8;border-radius:9px;background:#fff;color:#173f3a;font:inherit;font-size:16px}
+.saved-settings .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.saved-settings .secondary{min-height:44px;font-size:14px}
+.saved-settings .secondary:disabled{opacity:.5;cursor:default}
+.saved-settings [role=status]{font-size:14px;margin:8px 0 0;line-height:1.5}
+.saved-settings [role=status]:empty{display:none}
 </style></head><body><div class="page">
 <header class="brand"><img src="./icon-v2-192.png" alt="">単位水量ノート<span class="version">AIR METER / 厳密式</span></header>
 <main><div class="intro"><div class="eyebrow">無注水法 · エアメータ法</div></div>
@@ -19,6 +28,20 @@
 <p class="daily-guide"><strong>毎回の入力は、色付きの2項目。</strong><br>配合・機器条件を設定したら、① 測定空気量と ② エアメータ＋試料の質量を入力すると、自動で結果が出ます。配合や機器を変えたときは、ほかの条件も更新してください。</p>
 <div class="layout"><form id="water-form" class="card" novalidate>
 <section class="section"><h2><span class="number">1</span>配合・判定条件</h2>
+<details class="saved-settings" id="mix-presets">
+  <summary>配合の保存・呼び出し</summary>
+  <label for="saved-mix">保存した配合</label>
+  <select id="saved-mix" data-saved></select>
+  <div class="actions">
+    <button type="button" class="secondary" data-load>呼び出す</button>
+    <button type="button" class="secondary" data-delete>削除</button>
+  </div>
+  <label for="mix-name">配合名</label>
+  <input id="mix-name" data-name type="text" placeholder="例 40-15-25N" maxlength="60" autocomplete="off">
+  <div class="actions"><button type="button" class="secondary" data-save>今の配合を保存</button></div>
+  <p class="caption">骨材修正係数も配合と一緒に保存します。</p>
+  <p role="status"></p>
+</details>
 <div class="grid"><div><label for="water">水 W <span class="unit">kg/m³</span></label><input id="water" type="text" inputmode="decimal" value="161" autocomplete="off"></div><div><label for="cement">セメント C <span class="unit">kg/m³</span></label><input id="cement" type="text" inputmode="decimal" value="293" autocomplete="off"></div></div>
 <div class="material-group"><h3>細骨材 S <span class="unit">kg/m³</span></h3><div class="mix-grid"><div><label for="s1">S1 <span class="unit">kg/m³</span></label><input id="s1" type="text" inputmode="decimal" value="822" autocomplete="off" placeholder="0"></div>
 <div><label for="s2">S2 <span class="unit">kg/m³</span></label><input id="s2" type="text" inputmode="decimal" value="0" autocomplete="off" placeholder="0"></div>
@@ -29,7 +52,21 @@
 <div class="derived-values"><div><span class="derived-label">単位容積質量 Mc <small>自動計算</small></span><output id="density">—</output><span class="unit"> kg/m³</span></div><div><span class="derived-label">浸潤補正係数 α <small>自動計算</small></span><output id="alpha">—</output><span class="unit"> %</span></div></div>
 <p class="caption">Mc＝W＋C＋S1＋S2＋S3＋G1＋G2＋G3。使用しない骨材欄は空欄または0で入力できます。α＝C×0.001（係数固定）。Mcとαは自動表示のため直接編集できません。</p>
 <div class="grid mix-conditions"><div><label for="designAir">設計空気量 <span class="unit">%</span></label><input id="designAir" type="text" inputmode="decimal" value="4.5" autocomplete="off"></div><div><label for="limit">許容差 ± <span class="unit">kg/m³</span></label><input id="limit" type="text" inputmode="decimal" value="15" autocomplete="off"></div></div></section>
-<section class="section"><h2><span class="number">2</span>エアメータ・測定値</h2><div class="grid"><div class="daily-field"><span class="daily-tag">毎回入力 ①</span><label for="measuredAir">測定空気量 <span class="unit">%</span></label><input id="measuredAir" type="text" inputmode="decimal" value="5" autocomplete="off"></div>
+<section class="section"><h2><span class="number">2</span>エアメータ・測定値</h2>
+<details class="saved-settings" id="meter-presets">
+  <summary>エアメータの保存・呼び出し</summary>
+  <label for="saved-meter">保存したエアメータ</label>
+  <select id="saved-meter" data-saved></select>
+  <div class="actions">
+    <button type="button" class="secondary" data-load>呼び出す</button>
+    <button type="button" class="secondary" data-delete>削除</button>
+  </div>
+  <label for="meter-name">エアメータ名</label>
+  <input id="meter-name" data-name type="text" placeholder="例 エアメータ1号" maxlength="60" autocomplete="off">
+  <div class="actions"><button type="button" class="secondary" data-save>今のエアメータを保存</button></div>
+  <p role="status"></p>
+</details>
+<div class="grid"><div class="daily-field"><span class="daily-tag">毎回入力 ①</span><label for="measuredAir">測定空気量 <span class="unit">%</span></label><input id="measuredAir" type="text" inputmode="decimal" value="5" autocomplete="off"></div>
 <div><label for="correction">骨材修正係数 <span class="unit">%</span></label><input id="correction" type="text" inputmode="decimal" value="0" autocomplete="off"></div>
 <div><label for="volume">下容器容積 <span class="unit">L</span></label><input id="volume" type="text" inputmode="decimal" value="7.037" autocomplete="off"></div>
 <div><label for="tare">エアメータの質量 <span class="unit">g</span></label><input id="tare" type="text" inputmode="decimal" value="6321" autocomplete="off"></div>
