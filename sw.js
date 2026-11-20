@@ -1,6 +1,6 @@
 const scope = self.registration.scope;
 const cachePrefix = "unit-water:" + scope + ":";
-const cacheName = cachePrefix + "saved-settings-v1";
+const cacheName = cachePrefix + "saved-settings-v2";
 const indexURL = new URL("index.html", scope).href;
 const appFiles = new Set([
   "index.html",
@@ -15,7 +15,16 @@ const appFiles = new Set([
 ].map((file) => new URL(file, scope).href));
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll([...appFiles])));
+  event.waitUntil((async () => {
+    const cache = await caches.open(cacheName);
+    // HTTPキャッシュを使わず、常に最新ファイルを取得して保存する
+    await Promise.all([...appFiles].map(async (url) => {
+      const response = await fetch(new Request(url, { cache: "reload" }));
+      if (!response.ok) throw new Error("cache failed: " + url);
+      await cache.put(url, response);
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,6 +36,7 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
+// 電波があれば最新版を取得（更新が反映される）。圏外・低速(3秒超)なら保存済みを使う。
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -38,6 +48,18 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
-    return (await cache.match(key)) ?? fetch(request);
+    const cached = await cache.match(key);
+    const network = fetch(key, { cache: "no-cache" }).then((response) => {
+      if (response.ok) cache.put(key, response.clone());
+      return response;
+    });
+    event.waitUntil(network.catch(() => {}));
+    if (!cached) return network;
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+    try {
+      return (await Promise.race([network, timeout])) || cached;
+    } catch {
+      return cached;
+    }
   })());
 });
